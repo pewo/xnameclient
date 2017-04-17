@@ -55,7 +55,7 @@ sub getport($) {
 	my($target) = shift;
 	return(undef) unless ( $target );
 
-	my($port) = undef;
+	my($port) = 22;
 	my(@res) = popen("host -t TXT $target");
 	foreach ( @res ) {
 		if ( m/$target/ ) {
