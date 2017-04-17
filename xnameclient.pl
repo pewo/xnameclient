@@ -8,6 +8,7 @@
 #########
 #
 # 0.0.1 Mon Apr 17 18:48:34 CEST 2017
+# https://raw.githubusercontent.com/pewo/xnameclient/master/xnameclient.pl
 #
 #########
 # History
