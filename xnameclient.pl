@@ -24,7 +24,6 @@
 ##############
 
 use strict;
-use Data::Dumper;
 use Fcntl qw(:flock);
 use Sys::Hostname;
 use Getopt::Long;
