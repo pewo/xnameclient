@@ -100,9 +100,6 @@ GetOptions(
 	"debug",\$debug,
 );
 
-unless ( $server ) {
-	die "Usage: $0 --server=<dyndns servername> --hostname=<hostname to update>\n";
-}
 
 eval {
 	my($lock);
@@ -124,6 +121,9 @@ eval {
 		if ( $hostname =~ /\.xname\.se/ ) {
 			$server = "dyndns.xname.se";
 		}
+	}
+	unless ( $server ) {
+		die "Usage: $0 --server=<dyndns servername> --hostname=<hostname to update>\n";
 	}
 	my($port) = getport($server);
 	unless ( $port ) {
