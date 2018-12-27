@@ -31,6 +31,8 @@ use Getopt::Long;
 my($lockfile) = "/tmp/updateip.lock";
 my($ssh) = "/usr/bin/ssh";
 my($debug) = undef;
+my($timeout) = 30;
+my($alarm) = $timeout + 10;
 
 sub popen($) {
 	my($cmd) = shift;
@@ -53,7 +55,7 @@ sub popen($) {
 }
 
 sub getport($) {
-	my($target) = shift;
+	my($target) = lc(shift);
 	return(undef) unless ( $target );
 	print "Trying to get port on $target\n" if ( $debug );
 
@@ -61,7 +63,7 @@ sub getport($) {
 	my(@res) = popen("host -t TXT $target");
 	foreach ( @res ) {
 		print "Got TXT: $_\n" if ( $debug );
-		if ( m/$target/ ) {
+		if ( m/$target/i ) {
 			my($test) = $_;
 			$test =~ s/\D//g;
 			if ( $test && $test > 1024 ) {
@@ -90,58 +92,70 @@ sub unlock {
 	my ($fh) = @_;
 	flock($fh, LOCK_UN) or die "Cannot unlock $lockfile - $!\n";
 }
+
+sub dossh {
+	my($server) = shift;
+	my($hostname) = shift;
+	return unless ( defined($server) );
+
+	my($port) = getport($server);
+	unless ( $port ) {
+		print "Can't locate ssh port to our dyndns server(TXT record in DNS), exiting...\n";
+		return(1);
+	}
+
+	if ( ! -x $ssh ) {	
+		print "Please install a ssh client before trying this...exiting...\n";
+		return(2);
+	}
+	else {
+		my($sshcmd) = "$ssh -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout dyndns\@$server $hostname";
+		print "Executing: $sshcmd\n" if ( $debug );
+		return(system($sshcmd));
+	}
+}
 	
 
-my($server) = undef;
+my($server1) = "dyndns.xname.se";
+my($server2) = "pewo.xname.se";
 my($hostname) = undef;
 GetOptions(
-	"server=s",\$server,
 	"hostname=s",\$hostname,
 	"debug",\$debug,
 );
 
 
-eval {
-	my($lock);
-	unless ( open($lock, ">>", $lockfile) ) {
-		print "Writing $lockfile: $!\n";
-		exit(1);
-	}
-
-	local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required
-	alarm 60;
-
-	print "Locking $lockfile\n" if ( $debug );
-	lock($lock);
-
-	unless ( $hostname ) {
-		#$hostname = hostname;
-		$hostname = ""; # Lets the ssh key choose which name to update
-	}
-	unless ( $server ) {
-		$server = "dyndns.xname.se";
-	}
-
-	my($port) = getport($server);
-	unless ( $port ) {
-		die "Can't locate ssh port to our dyndns server(TXT record in DNS), exiting...\n";
-	}
-
-
-	if ( -x $ssh ) {	
-		system("$ssh -p $port -o 'StrictHostKeyChecking=no' dyndns\@$server $hostname");
-	}
-	else {
-		print "Please install a ssh client before trying this...exiting...\n";
-		exit(2);
-	}
-
-	alarm 0;
-
-	unlock($lock);
-};
-
-if ($@) {
-	die unless $@ eq "alarm\n";   # propagate unexpected errors
-	# timed out
+my($lock);
+unless ( open($lock, ">>", $lockfile) ) {
+	print "Writing $lockfile: $!\n";
+	exit(1);
 }
+
+
+print "Locking $lockfile\n" if ( $debug );
+lock($lock);
+
+unless ( $hostname ) {
+	#$hostname = hostname;
+	$hostname = ""; # Lets the ssh key choose which name to update
+}
+
+my($error) = 1;
+my($server);
+foreach $server ( $server1, $server2 ) {
+	next unless ( $error );
+	print "\nTrying server $server\n" if ( $debug );
+	eval {
+		local $SIG{ALRM} = sub { die "TIMEOUT\n" }; # NB: \n required
+		alarm $alarm;
+		$error = dossh($server,$hostname);
+		alarm 0;
+	};
+
+	print "Error: $error\n" if ( $debug );
+	if ($@) {
+		die unless $@ eq "TIMEOUT\n";   # propagate unexpected errors
+	}
+}
+
+unlock($lock);
