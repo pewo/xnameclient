@@ -7,7 +7,7 @@
 # Version
 #########
 #
-# 0.0.2 Thu Dec 27 13:06:20 CET 2018
+# 0.0.3 Thu Dec 27 15:24:23 CET 2018
 # https://raw.githubusercontent.com/pewo/xnameclient/master/xnameclient.pl
 #
 #########
@@ -115,16 +115,13 @@ eval {
 	lock($lock);
 
 	unless ( $hostname ) {
-		$hostname = hostname;
+		#$hostname = hostname;
+		$hostname = ""; # Lets the ssh key choose which name to update
 	}
 	unless ( $server ) {
-		if ( $hostname =~ /\.xname\.se/ ) {
-			$server = "dyndns.xname.se";
-		}
+		$server = "dyndns.xname.se";
 	}
-	unless ( $server ) {
-		die "Usage: $0 --server=<dyndns servername> --hostname=<hostname to update>\n";
-	}
+
 	my($port) = getport($server);
 	unless ( $port ) {
 		die "Can't locate ssh port to our dyndns server(TXT record in DNS), exiting...\n";
@@ -132,7 +129,7 @@ eval {
 
 
 	if ( -x $ssh ) {	
-		system("$ssh -p $port -o 'StrictHostKeyChecking=no' dyndns\@$server ip.pl --set=$hostname");
+		system("$ssh -p $port -o 'StrictHostKeyChecking=no' dyndns\@$server $hostname");
 	}
 	else {
 		print "Please install a ssh client before trying this...exiting...\n";
