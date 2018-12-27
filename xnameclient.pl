@@ -117,14 +117,19 @@ eval {
 	print "Locking $lockfile\n" if ( $debug );
 	lock($lock);
 
+	unless ( $hostname ) {
+		$hostname = hostname;
+	}
+	unless ( $server ) {
+		if ( $hostname =~ /\.xname\.se/ ) {
+			$server = "dyndns.xname.se";
+		}
+	}
 	my($port) = getport($server);
 	unless ( $port ) {
 		die "Can't locate ssh port to our dyndns server(TXT record in DNS), exiting...\n";
 	}
 
-	unless ( $hostname ) {
-		$hostname = hostname;
-	}
 
 	if ( -x $ssh ) {	
 		system("$ssh -p $port -o 'StrictHostKeyChecking=no' dyndns\@$server ip.pl --set=$hostname");
