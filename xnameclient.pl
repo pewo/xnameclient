@@ -7,7 +7,7 @@
 # Version
 #########
 #
-# 0.0.1 Mon Apr 17 18:48:34 CEST 2017
+# 0.0.2 Thu Dec 27 13:06:20 CET 2018
 # https://raw.githubusercontent.com/pewo/xnameclient/master/xnameclient.pl
 #
 #########
