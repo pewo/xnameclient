@@ -30,6 +30,7 @@ use Getopt::Long;
 
 my($lockfile) = "/tmp/updateip.lock";
 my($ssh) = "/usr/bin/ssh";
+my($debug) = undef;
 
 sub popen($) {
 	my($cmd) = shift;
@@ -54,10 +55,12 @@ sub popen($) {
 sub getport($) {
 	my($target) = shift;
 	return(undef) unless ( $target );
+	print "Trying to get port on $target\n" if ( $debug );
 
 	my($port) = 22;
 	my(@res) = popen("host -t TXT $target");
 	foreach ( @res ) {
+		print "Got TXT: $_\n" if ( $debug );
 		if ( m/$target/ ) {
 			my($test) = $_;
 			$test =~ s/\D//g;
@@ -68,9 +71,11 @@ sub getport($) {
 	}
 
 	if ( $port ) {
+		print "Returning $port\n" if ( $debug );
 		return($port);
 	}
 	else {
+		print "Returning <undef>\n" if ( $debug );
 		return(undef);
 	}
 }
@@ -92,6 +97,7 @@ my($hostname) = undef;
 GetOptions(
 	"server=s",\$server,
 	"hostname=s",\$hostname,
+	"debug",\$debug,
 );
 
 unless ( $server ) {
@@ -108,6 +114,7 @@ eval {
 	local $SIG{ALRM} = sub { die "alarm\n" }; # NB: \n required
 	alarm 60;
 
+	print "Locking $lockfile\n" if ( $debug );
 	lock($lock);
 
 	my($port) = getport($server);
