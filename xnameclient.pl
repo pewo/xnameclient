@@ -119,10 +119,18 @@ sub dossh {
 my($server1) = "dyndns.xname.se";
 my($server2) = "pewo.xname.se";
 my($hostname) = undef;
+my($help) = undef;
 GetOptions(
 	"hostname=s",\$hostname,
 	"debug",\$debug,
+	"help",\$help,
 );
+
+if ( $help ) {
+        print "Usage: $0 --hostname=<hostname> --debug --help\n";
+        exit(0);
+}
+
 
 
 my($lock);
