@@ -7,6 +7,9 @@
 # Version
 #########
 #
+# 0.0.4 Sun May 10 14:27:51 CEST 2020
+# Changed from pewo.xname.se to dyndns.pewo.se
+#
 # 0.0.3 Thu Dec 27 15:24:23 CET 2018
 # https://raw.githubusercontent.com/pewo/xnameclient/master/xnameclient.pl
 #
@@ -117,7 +120,7 @@ sub dossh {
 	
 
 my($server1) = "dyndns.xname.se";
-my($server2) = "pewo.xname.se";
+my($server2) = "dyndns.pewo.se";
 my($hostname) = undef;
 GetOptions(
 	"hostname=s",\$hostname,
